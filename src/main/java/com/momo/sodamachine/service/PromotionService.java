@@ -17,19 +17,23 @@ public class PromotionService {
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void adjustWinRateIfBudgetNotReached() {
-        log.info("Checking limited budget for a day.");
+        try {
+            log.info("Checking limited budget for a day.");
 
-        Promotion promotion = promotionRepository.findById(1).orElseThrow(() -> new RuntimeException("Promotion not found"));
+            Promotion promotion = promotionRepository.findById(1).orElseThrow(() -> new RuntimeException("Promotion not found"));
 
-        Double dailyBudget = promotion.getDailyBudget();
-        Double remainingBudget = promotion.getRemainingBudget();
+            Double dailyBudget = promotion.getDailyBudget();
+            Double remainingBudget = promotion.getRemainingBudget();
 
-        if (remainingBudget != 0) {
-            Double winRateIncreaseFactor = promotion.getWinRate() * 0.5;
-            promotion.setWinRate(promotion.getWinRate() + winRateIncreaseFactor);
-            log.info("Daily budget not reached. Increased win rate for next day by 50%.");
+            if (remainingBudget != 0) {
+                Double winRateIncreaseFactor = promotion.getWinRate() * 0.5;
+                promotion.setWinRate(promotion.getWinRate() + winRateIncreaseFactor);
+                log.info("Daily budget not reached. Increased win rate for next day by 50%.");
+            }
+            promotion.setRemainingBudget(dailyBudget);
+            promotionRepository.save(promotion);
+        } catch (Exception e) {
+            log.error("Error: " + e.getMessage());
         }
-        promotion.setRemainingBudget(dailyBudget);
-        promotionRepository.save(promotion);
     }
 }
